@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Simple Chat</title>
+<title>Realtime Chat</title>
 <style>
   body {
     margin: 0;
@@ -108,7 +108,25 @@
   <button onclick="send()">Send</button>
 </div>
 
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
 <script>
+  // TODO: REPLACE THIS WITH YOUR FIREBASE CONFIG
+  const firebaseConfig = {
+    apiKey: "YOUR_KEY",
+    authDomain: "YOUR_APP.firebaseapp.com",
+    databaseURL: "https://YOUR_APP-default-rtdb.firebaseio.com",
+    projectId: "YOUR_APP",
+    storageBucket: "YOUR_APP.appspot.com",
+    messagingSenderId: "000000000000",
+    appId: "1:000000000000:web:000000000000"
+  };
+
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
   const messagesEl = document.getElementById("messages");
   const usernameEl = document.getElementById("username");
   const avatarEl = document.getElementById("avatar");
@@ -120,31 +138,38 @@
     const text = textEl.value.trim();
     if (!text) return;
 
-    addMessage(name, avatar, text, true);
-    textEl.value = "";
+    db.ref("messages").push({
+      name,
+      avatar,
+      text,
+      time: Date.now()
+    });
 
-    // simple bot echo
-    setTimeout(() => {
-      addMessage("Bot", "https://api.dicebear.com/7.x/shapes/svg?seed=bot", "You said: " + text, false);
-    }, 400);
+    textEl.value = "";
   }
 
-  function addMessage(name, avatar, text, me) {
+  function addMessage(msg, me) {
     const row = document.createElement("div");
     row.className = "msg" + (me ? " me" : "");
 
     const img = document.createElement("img");
-    img.src = avatar;
+    img.src = msg.avatar;
 
     const bubble = document.createElement("div");
     bubble.className = "bubble";
-    bubble.innerHTML = "<b>" + name + ":</b><br>" + text;
+    bubble.innerHTML = "<b>" + msg.name + ":</b><br>" + msg.text;
 
     row.appendChild(img);
     row.appendChild(bubble);
     messagesEl.appendChild(row);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
+
+  db.ref("messages").on("child_added", snapshot => {
+    const msg = snapshot.val();
+    const me = msg.name === usernameEl.value.trim();
+    addMessage(msg, me);
+  });
 
   textEl.addEventListener("keydown", e => {
     if (e.key === "Enter") send();
