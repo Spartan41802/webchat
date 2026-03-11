@@ -1,350 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Web Discord Clone</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+<meta charset="UTF-8">
+<title>Discord Web</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    body {
-      background: #202225;
-      color: #dcddde;
-      height: 100vh;
-      overflow: hidden;
-    }
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui; }
+  body { background: #202225; color: #dcddde; height: 100vh; overflow: hidden; }
 
-    .app {
-      display: flex;
-      height: 100%;
-      width: 100%;
-    }
+  /* THEMES */
+  body.light { background: #f2f3f5; color: #111; }
+  body.light .sidebar, body.light .chat { background: #fff; color: #111; }
 
-    /* Left server bar */
-    .servers {
-      width: 72px;
-      background: #202225;
-      padding: 12px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      border-right: 1px solid #18191c;
-    }
+  body.midnight { background: #1a1025; }
+  body.midnight .chat { background: #241433; }
 
-    .server-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: #36393f;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 20px;
-      cursor: pointer;
-      transition: 0.15s;
-    }
+  .app { display: flex; height: 100%; width: 100%; }
 
-    .server-icon:hover {
-      border-radius: 16px;
-      background: #5865f2;
-    }
+  /* Servers */
+  .servers { width: 72px; background: #202225; padding: 12px 0; display: flex; flex-direction: column; align-items: center; gap: 12px; border-right: 1px solid #18191c; }
+  .server-icon { width: 48px; height: 48px; border-radius: 50%; background: #36393f; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; cursor: pointer; transition: 0.15s; }
+  .server-icon:hover { border-radius: 16px; background: #5865f2; }
 
-    /* Channel list */
-    .sidebar {
-      width: 240px;
-      background: #2f3136;
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid #18191c;
-    }
+  /* Sidebar */
+  .sidebar { width: 240px; background: #2f3136; display: flex; flex-direction: column; border-right: 1px solid #18191c; }
+  .sidebar-header { padding: 12px; background: #292b2f; font-weight: 600; font-size: 14px; border-bottom: 1px solid #18191c; }
 
-    .sidebar-header {
-      padding: 12px;
-      background: #292b2f;
-      font-weight: 600;
-      font-size: 14px;
-      border-bottom: 1px solid #18191c;
-    }
+  .channels { padding: 8px 0; overflow-y: auto; flex: 1; }
+  .channel { padding: 4px 12px; font-size: 14px; color: #8e9297; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .channel:hover, .channel.active { background: #393c43; color: #fff; }
 
-    .channels {
-      padding: 8px 0;
-      overflow-y: auto;
-      flex: 1;
-    }
+  .user-bar { padding: 8px 12px; background: #292b2f; display: flex; align-items: center; justify-content: space-between; font-size: 13px; cursor: pointer; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: #7289da; background-size: cover; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
 
-    .channel {
-      padding: 4px 12px;
-      font-size: 14px;
-      color: #8e9297;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+  /* Chat */
+  .chat { flex: 1; display: flex; flex-direction: column; background: #36393f; }
+  .chat-header { height: 48px; padding: 0 16px; border-bottom: 1px solid #202225; display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
+  .chat-messages { flex: 1; padding: 16px; overflow-y: auto; font-size: 14px; }
 
-    .channel span {
-      color: #8e9297;
-    }
+  .message { display: flex; gap: 12px; margin-bottom: 12px; }
+  .message-avatar { width: 40px; height: 40px; border-radius: 50%; background: #5865f2; background-size: cover; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .message-body { flex: 1; }
+  .message-header { display: flex; align-items: baseline; gap: 6px; }
+  .message-username { font-weight: 600; }
+  .message-timestamp { font-size: 11px; color: #72767d; }
 
-    .channel.active,
-    .channel:hover {
-      background: #393c43;
-      color: #fff;
-    }
+  .chat-input { padding: 12px 16px; border-top: 1px solid #202225; background: #40444b; }
+  .chat-input-inner { background: #40444b; border-radius: 8px; border: 1px solid #202225; display: flex; align-items: center; padding: 0 10px; gap: 8px; }
+  .chat-input-inner input { flex: 1; border: none; background: transparent; color: #dcddde; padding: 10px 0; font-size: 14px; outline: none; }
+  .chat-input-inner button { border: none; background: #5865f2; color: #fff; padding: 6px 12px; border-radius: 4px; font-size: 13px; cursor: pointer; }
 
-    .channel.active span {
-      color: #fff;
-    }
-
-    .user-bar {
-      padding: 8px 12px;
-      background: #292b2f;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 13px;
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: #7289da;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    /* Main chat area */
-    .chat {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: #36393f;
-    }
-
-    .chat-header {
-      height: 48px;
-      padding: 0 16px;
-      border-bottom: 1px solid #202225;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .chat-header span {
-      color: #8e9297;
-      font-weight: 400;
-      font-size: 14px;
-    }
-
-    .chat-messages {
-      flex: 1;
-      padding: 16px;
-      overflow-y: auto;
-      font-size: 14px;
-    }
-
-    .message {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .message-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #5865f2;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-    }
-
-    .message-body {
-      flex: 1;
-    }
-
-    .message-header {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-    }
-
-    .message-username {
-      font-weight: 600;
-    }
-
-    .message-timestamp {
-      font-size: 11px;
-      color: #72767d;
-    }
-
-    .message-content {
-      margin-top: 2px;
-      line-height: 1.4;
-    }
-
-    .chat-input {
-      padding: 12px 16px;
-      border-top: 1px solid #202225;
-      background: #40444b;
-    }
-
-    .chat-input-inner {
-      background: #40444b;
-      border-radius: 8px;
-      border: 1px solid #202225;
-      display: flex;
-      align-items: center;
-      padding: 0 10px;
-      gap: 8px;
-    }
-
-    .chat-input-inner input {
-      flex: 1;
-      border: none;
-      background: transparent;
-      color: #dcddde;
-      padding: 10px 0;
-      font-size: 14px;
-      outline: none;
-    }
-
-    .chat-input-inner button {
-      border: none;
-      background: #5865f2;
-      color: #fff;
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .chat-input-inner button:hover {
-      background: #4752c4;
-    }
-
-    @media (max-width: 768px) {
-      .servers {
-        display: none;
-      }
-      .sidebar {
-        width: 180px;
-      }
-    }
-  </style>
+  /* Settings Panel */
+  #settingsPanel {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: #2f3136; padding: 20px;
+    border-radius: 10px; width: 300px;
+    display: none; z-index: 999; color: white;
+  }
+  #settingsPanel input, #settingsPanel select {
+    width: 100%; margin-bottom: 10px; padding: 6px;
+    border-radius: 6px; border: none;
+  }
+</style>
 </head>
+
 <body>
-  <div class="app">
-    <!-- Servers -->
-    <div class="servers">
-      <div class="server-icon">D</div>
-      <div class="server-icon">1</div>
-      <div class="server-icon">+</div>
+
+<audio id="ping" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+<div class="app">
+
+  <div class="servers">
+    <div class="server-icon">D</div>
+    <div class="server-icon">1</div>
+    <div class="server-icon">+</div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-header">My Server</div>
+    <div class="channels">
+      <div class="channel active"><span>#</span> general</div>
     </div>
 
-    <!-- Channels -->
-    <div class="sidebar">
-      <div class="sidebar-header">My Server</div>
-      <div class="channels">
-        <div class="channel active"><span>#</span> general</div>
-        <div class="channel"><span>#</span> memes</div>
-        <div class="channel"><span>#</span> dev-chat</div>
+    <div class="user-bar" onclick="toggleSettings()">
+      <div class="user-info">
+        <div id="userAvatar" class="avatar">U</div>
       </div>
-      <div class="user-bar">
-        <div class="user-info">
-          <div class="avatar">U</div>
-          <div>
-            <div style="font-weight:600;">username</div>
-            <div style="font-size:11px;color:#72767d;">#1234</div>
-          </div>
-        </div>
-        <div>⚙️</div>
-      </div>
+      ⚙️
     </div>
+  </div>
 
-    <!-- Chat -->
-    <div class="chat">
-      <div class="chat-header">
-        # general <span>— Web Discord clone</span>
-      </div>
-      <div class="chat-messages" id="messages">
-        <div class="message">
-          <div class="message-avatar">U</div>
-          <div class="message-body">
-            <div class="message-header">
-              <div class="message-username">username</div>
-              <div class="message-timestamp">Today at 12:00 PM</div>
-            </div>
-            <div class="message-content">
-              Welcome to your Discord‑style web page hosted on GitHub Pages!
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="chat-input">
-        <div class="chat-input-inner">
-          <input id="input" type="text" placeholder="Message #general" />
-          <button id="send">Send</button>
-        </div>
+  <div class="chat">
+    <div class="chat-header"># general <span>— Web Discord clone</span></div>
+    <div class="chat-messages" id="messages"></div>
+
+    <div class="chat-input">
+      <div class="chat-input-inner">
+        <input id="input" type="text" placeholder="Message #general">
+        <button id="send">Send</button>
       </div>
     </div>
   </div>
 
-  <script>
-    const input = document.getElementById("input");
-    const send = document.getElementById("send");
-    const messages = document.getElementById("messages");
+</div>
 
-    function addMessage(text) {
-      if (!text.trim()) return;
-      const wrapper = document.createElement("div");
-      wrapper.className = "message";
-      wrapper.innerHTML = `
-        <div class="message-avatar">U</div>
-        <div class="message-body">
-          <div class="message-header">
-            <div class="message-username">you</div>
-            <div class="message-timestamp">just now</div>
-          </div>
-          <div class="message-content"></div>
-        </div>`;
-      wrapper.querySelector(".message-content").textContent = text;
-      messages.appendChild(wrapper);
-      messages.scrollTop = messages.scrollHeight;
-    }
+<!-- SETTINGS PANEL -->
+<div id="settingsPanel">
+  <h3>Settings</h3>
 
-    send.addEventListener("click", () => {
+  <label>Username:</label>
+  <input id="usernameInput" type="text">
+
+  <label>Profile Picture URL:</label>
+  <input id="pfpInput" type="text">
+
+  <label>Theme:</label>
+  <select id="themeSelect">
+    <option value="dark">Dark</option>
+    <option value="light">Light</option>
+    <option value="midnight">Midnight Purple</option>
+  </select>
+
+  <button id="saveSettings">Save</button>
+</div>
+
+<script>
+  const input = document.getElementById("input");
+  const send = document.getElementById("send");
+  const messages = document.getElementById("messages");
+  const ping = document.getElementById("ping");
+
+  const settingsPanel = document.getElementById("settingsPanel");
+  const usernameInput = document.getElementById("usernameInput");
+  const pfpInput = document.getElementById("pfpInput");
+  const themeSelect = document.getElementById("themeSelect");
+  const saveSettings = document.getElementById("saveSettings");
+  const userAvatar = document.getElementById("userAvatar");
+
+  // Load settings
+  const settings = JSON.parse(localStorage.getItem("settings") || "{}");
+  let username = settings.username || "you";
+  let pfp = settings.pfp || "U";
+  let theme = settings.theme || "dark";
+
+  usernameInput.value = username;
+  pfpInput.value = pfp;
+  themeSelect.value = theme;
+  document.body.classList.add(theme);
+
+  if (pfp.length > 2) userAvatar.style.backgroundImage = `url('${pfp}')`;
+  else userAvatar.textContent = pfp;
+
+  // Load messages
+  const saved = JSON.parse(localStorage.getItem("chatMessages") || "[]");
+  saved.forEach(msg => addMessage(msg.text, false, msg.username, msg.pfp));
+
+  function addMessage(text, playSound = true, user = username, avatar = pfp) {
+    if (!text.trim()) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "message";
+
+    wrapper.innerHTML = `
+      <div class="message-avatar" style="
+        background-image: url('${avatar}');
+        background-size: cover;
+      ">${avatar.length > 2 ? "" : avatar}</div>
+
+      <div class="message-body">
+        <div class="message-header">
+          <div class="message-username">${user}</div>
+          <div class="message-timestamp">just now</div>
+        </div>
+        <div class="message-content">${text}</div>
+      </div>`;
+
+    messages.appendChild(wrapper);
+    messages.scrollTop = messages.scrollHeight;
+
+    const current = JSON.parse(localStorage.getItem("chatMessages") || "[]");
+    current.push({ text, username: user, pfp: avatar });
+    localStorage.setItem("chatMessages", JSON.stringify(current));
+
+    if (playSound) ping.play();
+  }
+
+  send.addEventListener("click", () => {
+    addMessage(input.value);
+    input.value = "";
+  });
+
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
       addMessage(input.value);
       input.value = "";
-    });
+    }
+  });
 
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        addMessage(input.value);
-        input.value = "";
-      }
-    });
-  </script>
+  function toggleSettings() {
+    settingsPanel.style.display =
+      settingsPanel.style.display === "none" ? "block" : "none";
+  }
+
+  saveSettings.addEventListener("click", () => {
+    const newSettings = {
+      username: usernameInput.value,
+      pfp: pfpInput.value,
+      theme: themeSelect.value
+    };
+
+    localStorage.setItem("settings", JSON.stringify(newSettings));
+    location.reload();
+  });
+</script>
+
 </body>
 </html>
